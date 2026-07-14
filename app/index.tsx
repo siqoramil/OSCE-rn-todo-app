@@ -1,14 +1,12 @@
-import { useState } from 'react';
-import {
-  FlatList,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
+import { useColorScheme } from 'nativewind';
+import { useMemo, useState } from 'react';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { Logo } from '@/components/Logo';
+import { useTranslation } from '@/lib/i18n';
+import { FlatList, Pressable, Text, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 type Todo = {
@@ -18,9 +16,18 @@ type Todo = {
 };
 
 export default function TodoScreen() {
+  const { colorScheme, toggleColorScheme } = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  const { t } = useTranslation();
+
   const [todos, setTodos] = useState<Todo[]>([]);
   const [text, setText] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
+
+  const remaining = useMemo(
+    () => todos.filter((t) => !t.done).length,
+    [todos]
+  );
 
   // CREATE / UPDATE (title)
   const submit = () => {
@@ -64,50 +71,126 @@ export default function TodoScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <Text style={styles.heading}>My Todos</Text>
-
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <View style={styles.inputRow}>
-          <TextInput
-            style={styles.input}
-            placeholder="What needs doing?"
-            placeholderTextColor="#9ca3af"
-            value={text}
-            onChangeText={setText}
-            onSubmitEditing={submit}
-            returnKeyType="done"
-          />
-          <Pressable style={styles.addBtn} onPress={submit}>
-            <Text style={styles.addBtnText}>{editingId ? 'Save' : 'Add'}</Text>
-          </Pressable>
+    <SafeAreaView className="flex-1 bg-slate-50 dark:bg-slate-950" edges={['top']}>
+      <View className="px-5">
+        {/* Header */}
+        <View className="flex-row items-center justify-between pt-3 pb-1">
+          <View className="flex-row items-center gap-3">
+            <Logo size={40} />
+            <View>
+              <Text className="text-3xl font-extrabold tracking-widest text-slate-900 dark:text-white">
+                JANGSHN
+              </Text>
+              <Text className="mt-0.5 text-sm font-medium text-slate-400 dark:text-slate-500">
+                {remaining > 0
+                  ? t('tasksLeft', { count: remaining })
+                  : t('allDone')}
+              </Text>
+            </View>
+          </View>
+          <View className="flex-row items-center gap-2">
+            <LanguageSwitcher />
+            <Pressable
+              onPress={toggleColorScheme}
+              hitSlop={8}
+              className="h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white active:opacity-70 dark:border-slate-700 dark:bg-slate-800">
+              <Ionicons
+                name={isDark ? 'sunny-outline' : 'moon-outline'}
+                size={20}
+                color={isDark ? '#facc15' : '#475569'}
+              />
+            </Pressable>
+            <Pressable
+              onPress={() => router.replace('/login')}
+              hitSlop={8}
+              className="h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white active:opacity-70 dark:border-slate-700 dark:bg-slate-800">
+              <Ionicons
+                name="log-out-outline"
+                size={20}
+                color={isDark ? '#94a3b8' : '#475569'}
+              />
+            </Pressable>
+          </View>
         </View>
-      </KeyboardAvoidingView>
 
+        {/* Input */}
+        <KeyboardAvoidingView behavior="padding">
+          <View className="mt-4 mb-4 flex-row items-center gap-2">
+            <TextInput
+              className="flex-1 rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-[16px] leading-[20px] text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+              placeholder={t('whatToDo')}
+              placeholderTextColor={isDark ? '#64748b' : '#9ca3af'}
+              value={text}
+              onChangeText={setText}
+              onSubmitEditing={submit}
+              returnKeyType="done"
+            />
+            <Pressable
+              onPress={submit}
+              className="rounded-2xl bg-indigo-500 px-5 py-3.5 shadow-lg shadow-indigo-500/30 active:opacity-80">
+              <Text className="text-base font-bold text-white">
+                {editingId ? t('save') : t('add')}
+              </Text>
+            </Pressable>
+          </View>
+        </KeyboardAvoidingView>
+      </View>
+
+      {/* List */}
       <FlatList
         data={todos}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.list}
+        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 32, gap: 10 }}
         ListEmptyComponent={
-          <Text style={styles.empty}>No todos yet. Add one above 👆</Text>
+          <View className="mt-24 items-center">
+            <Ionicons
+              name="clipboard-outline"
+              size={56}
+              color={isDark ? '#334155' : '#cbd5e1'}
+            />
+            <Text className="mt-3 text-base font-medium text-slate-400 dark:text-slate-500">
+              {t('emptyList')}
+            </Text>
+          </View>
         }
         renderItem={({ item }) => (
-          <View style={styles.row}>
-            <Pressable style={styles.rowMain} onPress={() => toggle(item.id)}>
-              <View style={[styles.checkbox, item.done && styles.checkboxDone]}>
-                {item.done && <Text style={styles.checkmark}>✓</Text>}
+          <View className="flex-row items-center gap-3 rounded-2xl border border-slate-100 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <Pressable
+              className="flex-1 flex-row items-center gap-3"
+              onPress={() => toggle(item.id)}>
+              <View
+                className={`h-6 w-6 items-center justify-center rounded-lg border-2 ${
+                  item.done
+                    ? 'border-indigo-500 bg-indigo-500'
+                    : 'border-slate-300 dark:border-slate-600'
+                }`}>
+                {item.done && (
+                  <Ionicons name="checkmark" size={16} color="#ffffff" />
+                )}
               </View>
-              <Text style={[styles.title, item.done && styles.titleDone]}>
+              <Text
+                className={`flex-1 text-base ${
+                  item.done
+                    ? 'text-slate-400 line-through dark:text-slate-600'
+                    : 'text-slate-900 dark:text-white'
+                }`}>
                 {item.title}
               </Text>
             </Pressable>
 
             <Pressable onPress={() => startEdit(item)} hitSlop={8}>
-              <Text style={styles.action}>✏️</Text>
+              <Ionicons
+                name="create-outline"
+                size={22}
+                color={isDark ? '#94a3b8' : '#64748b'}
+              />
             </Pressable>
             <Pressable onPress={() => remove(item.id)} hitSlop={8}>
-              <Text style={styles.action}>🗑️</Text>
+              <Ionicons
+                name="trash-outline"
+                size={22}
+                color={isDark ? '#f87171' : '#ef4444'}
+              />
             </Pressable>
           </View>
         )}
@@ -115,100 +198,3 @@ export default function TodoScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f9fafb',
-    paddingHorizontal: 16,
-  },
-  heading: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#111827',
-    marginVertical: 12,
-  },
-  inputRow: {
-    flexDirection: 'row',
-    gap: 8,
-    marginBottom: 16,
-  },
-  input: {
-    flex: 1,
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 16,
-    color: '#111827',
-  },
-  addBtn: {
-    backgroundColor: '#2563eb',
-    borderRadius: 10,
-    paddingHorizontal: 16,
-    justifyContent: 'center',
-  },
-  addBtnText: {
-    color: '#fff',
-    fontWeight: '600',
-    fontSize: 16,
-  },
-  list: {
-    gap: 8,
-    paddingBottom: 24,
-  },
-  empty: {
-    textAlign: 'center',
-    color: '#9ca3af',
-    marginTop: 40,
-    fontSize: 16,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    gap: 12,
-  },
-  rowMain: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  checkbox: {
-    width: 24,
-    height: 24,
-    borderRadius: 6,
-    borderWidth: 2,
-    borderColor: '#2563eb',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  checkboxDone: {
-    backgroundColor: '#2563eb',
-  },
-  checkmark: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  title: {
-    flex: 1,
-    fontSize: 16,
-    color: '#111827',
-  },
-  titleDone: {
-    textDecorationLine: 'line-through',
-    color: '#9ca3af',
-  },
-  action: {
-    fontSize: 18,
-  },
-});
