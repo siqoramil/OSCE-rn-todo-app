@@ -14,6 +14,7 @@ import {
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { Logo } from '@/components/Logo';
 import { useTranslation, type Locale } from '@/lib/i18n';
+import { useUser } from '@/lib/user';
 
 type Gender = 'male' | 'female';
 
@@ -40,6 +41,7 @@ export default function SignupScreen() {
   const { colorScheme, toggleColorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
   const { t, locale } = useTranslation();
+  const { setUser } = useUser();
   const insets = useSafeAreaInsets();
 
   const [step, setStep] = useState<number>(1);
@@ -90,7 +92,8 @@ export default function SignupScreen() {
     if (step < TOTAL_STEPS) {
       setStep((s) => s + 1);
     } else {
-      // Sign up complete → go to the app
+      // Sign up complete → save the name and go to the app
+      setUser({ fullName: `${firstName.trim()} ${lastName.trim()}` });
       router.replace('/');
     }
   };

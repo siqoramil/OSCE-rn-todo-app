@@ -5,6 +5,7 @@ import { useMemo, useState } from 'react';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { Logo } from '@/components/Logo';
 import { useTranslation } from '@/lib/i18n';
+import { useUser } from '@/lib/user';
 import { FlatList, Pressable, Text, TextInput, View } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -19,6 +20,7 @@ export default function TodoScreen() {
   const { colorScheme, toggleColorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
   const { t } = useTranslation();
+  const { user, clearUser } = useUser();
 
   const [todos, setTodos] = useState<Todo[]>([]);
   const [text, setText] = useState('');
@@ -78,8 +80,10 @@ export default function TodoScreen() {
           <View className="flex-row items-center gap-3">
             <Logo size={40} />
             <View>
-              <Text className="text-3xl font-extrabold tracking-widest text-slate-900 dark:text-white">
-                JANGSHN
+              <Text
+                numberOfLines={1}
+                className="text-3xl font-extrabold tracking-widest text-slate-900 dark:text-white">
+                {user?.fullName?.trim() || 'JANGSHN'}
               </Text>
               <Text className="mt-0.5 text-sm font-medium text-slate-400 dark:text-slate-500">
                 {remaining > 0
@@ -101,7 +105,10 @@ export default function TodoScreen() {
               />
             </Pressable>
             <Pressable
-              onPress={() => router.replace('/login')}
+              onPress={() => {
+                clearUser();
+                router.replace('/login');
+              }}
               hitSlop={8}
               className="h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white active:opacity-70 dark:border-slate-700 dark:bg-slate-800">
               <Ionicons

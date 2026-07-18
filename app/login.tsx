@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { Logo } from '@/components/Logo';
 import { useTranslation } from '@/lib/i18n';
+import { displayNameFromContact, useUser } from '@/lib/user';
 import { Pressable, Text, TextInput, View } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import {
@@ -18,6 +19,7 @@ export default function LoginScreen() {
   const { colorScheme, toggleColorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
   const { t } = useTranslation();
+  const { setUser } = useUser();
   const insets = useSafeAreaInsets();
 
   const [email, setEmail] = useState<string>('');
@@ -37,6 +39,7 @@ export default function LoginScreen() {
       return;
     }
     setError(null);
+    setUser({ fullName: displayNameFromContact(email) });
     router.replace('/');
   };
 

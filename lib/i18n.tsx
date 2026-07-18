@@ -38,7 +38,7 @@ export const translations = {
     stepOf: 'Step %{current} of %{total}',
     next: 'Next',
     back: 'Back',
-    step1Title: 'What is your name?',
+    step1Title: 'What is your fullname?',
     step2Title: 'Tell us about yourself',
     step3Title: 'Set up your login',
     firstName: 'First name',
