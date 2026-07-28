@@ -44,6 +44,14 @@ export const translations = {
     networkError: 'Network error. Check your connection.',
     genericError: 'Something went wrong. Try again.',
     loadingTasks: 'Loading tasks…',
+    or: 'or',
+    continueWithGoogle: 'Continue with Google',
+    googleCancelled: 'Google sign-in was cancelled',
+    signInInProgress: 'Sign-in is already in progress',
+    playServicesMissing: 'Google Play Services is unavailable',
+    googleNeedsDevBuild:
+      'Google sign-in needs a development build — it does not work in Expo Go.',
+    googleNotConfigured: 'Google sign-in is not configured yet',
   },
   ru: {
     welcome: 'Добро пожаловать, войдите чтобы продолжить',
@@ -70,6 +78,14 @@ export const translations = {
     networkError: 'Ошибка сети. Проверьте подключение.',
     genericError: 'Что-то пошло не так. Попробуйте снова.',
     loadingTasks: 'Загрузка задач…',
+    or: 'или',
+    continueWithGoogle: 'Продолжить с Google',
+    googleCancelled: 'Вход через Google отменён',
+    signInInProgress: 'Вход уже выполняется',
+    playServicesMissing: 'Google Play Services недоступны',
+    googleNeedsDevBuild:
+      'Для входа через Google нужен development build — в Expo Go не работает.',
+    googleNotConfigured: 'Вход через Google ещё не настроен',
   },
   ko: {
     welcome: '환영합니다, 계속하려면 로그인하세요',
@@ -96,6 +112,14 @@ export const translations = {
     networkError: '네트워크 오류입니다. 연결을 확인하세요.',
     genericError: '문제가 발생했습니다. 다시 시도하세요.',
     loadingTasks: '작업 불러오는 중…',
+    or: '또는',
+    continueWithGoogle: 'Google로 계속하기',
+    googleCancelled: 'Google 로그인이 취소되었습니다',
+    signInInProgress: '이미 로그인이 진행 중입니다',
+    playServicesMissing: 'Google Play 서비스를 사용할 수 없습니다',
+    googleNeedsDevBuild:
+      'Google 로그인은 development build가 필요합니다 — Expo Go에서는 작동하지 않습니다.',
+    googleNotConfigured: 'Google 로그인이 아직 설정되지 않았습니다',
   },
 };
 

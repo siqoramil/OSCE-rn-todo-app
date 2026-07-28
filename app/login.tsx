@@ -2,8 +2,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useColorScheme } from 'nativewind';
 import { useState } from 'react';
+import { GoogleButton, OrDivider } from '@/components/GoogleButton';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { Logo } from '@/components/Logo';
+import { googleErrorKey, isGoogleConfigured } from '@/lib/google-auth';
 import { useTranslation } from '@/lib/i18n';
 import { authErrorKey, useUser } from '@/lib/user';
 import {
@@ -25,7 +27,7 @@ export default function LoginScreen() {
   const { colorScheme, toggleColorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
   const { t } = useTranslation();
-  const { signIn } = useUser();
+  const { signIn, signInWithGoogle } = useUser();
   const insets = useSafeAreaInsets();
 
   const [email, setEmail] = useState<string>('');
@@ -33,6 +35,7 @@ export default function LoginScreen() {
   const [error, setError] = useState<ErrorKey>(null);
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [submitting, setSubmitting] = useState<boolean>(false);
+  const [googleSubmitting, setGoogleSubmitting] = useState<boolean>(false);
 
   const isValidEmail = (value: string) => /^\S+@\S+\.\S+$/.test(value);
 
@@ -54,6 +57,25 @@ export default function LoginScreen() {
       setError(authErrorKey(e));
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const submitGoogle = async () => {
+    if (!isGoogleConfigured()) {
+      setError('googleNotConfigured');
+      return;
+    }
+    setError(null);
+    setGoogleSubmitting(true);
+    try {
+      await signInWithGoogle();
+      // The auth gate in _layout navigates once the user is set.
+    } catch (e) {
+      const key = googleErrorKey(e);
+      // Backing out of the account picker isn't an error worth showing.
+      setError(key === 'googleCancelled' ? null : key);
+    } finally {
+      setGoogleSubmitting(false);
     }
   };
 
@@ -93,7 +115,7 @@ export default function LoginScreen() {
               <Logo size={84} />
             </View>
             <Text className="text-4xl font-extrabold tracking-widest text-slate-900 dark:text-white">
-              JANGSHN
+              OSCE-Todo
             </Text>
             <Text className="mt-2 text-base font-medium text-slate-400 dark:text-slate-500">
               {t('welcome')}
@@ -147,13 +169,22 @@ export default function LoginScreen() {
 
             <Pressable
               onPress={submit}
-              disabled={submitting}
+              disabled={submitting || googleSubmitting}
               className="mt-2 h-14 flex-row items-center justify-center gap-2 rounded-2xl bg-indigo-500 shadow-lg shadow-indigo-500/30 active:opacity-80 disabled:opacity-60">
               {submitting && <ActivityIndicator size="small" color="#ffffff" />}
               <Text className="text-base font-bold text-white">
                 {t('signIn')}
               </Text>
             </Pressable>
+
+            <OrDivider label={t('or')} />
+
+            <GoogleButton
+              label={t('continueWithGoogle')}
+              onPress={submitGoogle}
+              loading={googleSubmitting}
+              disabled={submitting}
+            />
 
             <View className="mt-2 flex-row justify-center gap-1">
               <Text className="text-sm text-slate-400 dark:text-slate-500">

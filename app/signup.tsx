@@ -14,8 +14,10 @@ import {
   SafeAreaView,
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
+import { GoogleButton, OrDivider } from '@/components/GoogleButton';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { Logo } from '@/components/Logo';
+import { googleErrorKey, isGoogleConfigured } from '@/lib/google-auth';
 import { useTranslation } from '@/lib/i18n';
 import { authErrorKey, useUser } from '@/lib/user';
 
@@ -28,7 +30,7 @@ export default function SignupScreen() {
   const { colorScheme, toggleColorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
   const { t } = useTranslation();
-  const { signUp } = useUser();
+  const { signUp, signInWithGoogle } = useUser();
   const insets = useSafeAreaInsets();
 
   const [fullName, setFullName] = useState('');
@@ -37,6 +39,7 @@ export default function SignupScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<ErrorKey>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [googleSubmitting, setGoogleSubmitting] = useState(false);
 
   const placeholderColor = isDark ? '#64748b' : '#9ca3af';
 
@@ -64,6 +67,24 @@ export default function SignupScreen() {
       setError(authErrorKey(e));
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  // Google has no separate "sign up" — the first sign-in creates the account.
+  const handleGoogle = async () => {
+    if (!isGoogleConfigured()) {
+      setError('googleNotConfigured');
+      return;
+    }
+    setError(null);
+    setGoogleSubmitting(true);
+    try {
+      await signInWithGoogle();
+    } catch (e) {
+      const key = googleErrorKey(e);
+      setError(key === 'googleCancelled' ? null : key);
+    } finally {
+      setGoogleSubmitting(false);
     }
   };
 
@@ -160,14 +181,23 @@ export default function SignupScreen() {
         </View>
 
         {/* Action */}
-        <View className="mb-4 mt-6">
+        <View className="mb-4 mt-6 gap-4">
           <Pressable
             onPress={handleSignUp}
-            disabled={submitting}
+            disabled={submitting || googleSubmitting}
             className="h-14 flex-row items-center justify-center gap-2 rounded-2xl bg-indigo-500 shadow-lg shadow-indigo-500/30 active:opacity-80 disabled:opacity-60">
             {submitting && <ActivityIndicator size="small" color="#ffffff" />}
             <Text className="text-base font-bold text-white">{t('signUp')}</Text>
           </Pressable>
+
+          <OrDivider label={t('or')} />
+
+          <GoogleButton
+            label={t('continueWithGoogle')}
+            onPress={handleGoogle}
+            loading={googleSubmitting}
+            disabled={submitting}
+          />
         </View>
 
         {/* Sign in link */}

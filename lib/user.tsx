@@ -15,6 +15,7 @@ import {
   type ReactNode,
 } from 'react';
 import { auth } from './firebase';
+import { signInWithGoogle, signOutFromGoogle } from './google-auth';
 
 type User = {
   uid: string;
@@ -27,6 +28,7 @@ type AuthContextValue = {
   initializing: boolean;
   signUp: (fullName: string, email: string, password: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
 };
 
@@ -75,6 +77,7 @@ function toUser(fb: FirebaseUser): User {
   return {
     uid: fb.uid,
     email: fb.email,
+    // Google accounts arrive with displayName already set.
     fullName: fb.displayName?.trim() || fromEmail,
   };
 }
@@ -108,7 +111,13 @@ export function UserProvider({ children }: { children: ReactNode }) {
       signIn: async (email, password) => {
         await signInWithEmailAndPassword(auth, email.trim(), password);
       },
+      signInWithGoogle: async () => {
+        await signInWithGoogle();
+      },
       signOut: async () => {
+        // Clear the cached Google account too, otherwise the next sign-in
+        // silently reuses it instead of showing the picker.
+        await signOutFromGoogle();
         await firebaseSignOut(auth);
       },
     }),

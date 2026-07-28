@@ -101,7 +101,7 @@ export default function TodoScreen() {
               <Text
                 numberOfLines={1}
                 className="text-3xl font-extrabold tracking-widest text-slate-900 dark:text-white">
-                {user?.fullName?.trim() || 'JANGSHN'}
+                {user?.fullName?.trim() || 'OSCE-Todo'}
               </Text>
               <Text className="mt-0.5 text-sm font-medium text-slate-400 dark:text-slate-500">
                 {remaining > 0

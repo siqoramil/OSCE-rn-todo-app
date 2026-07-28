@@ -27,13 +27,14 @@ You can start developing by editing the files inside the **app** directory. This
 
 ## Firebase setup
 
-This app uses **Firebase Auth** (email/password) and **Cloud Firestore** for the
-todo list. It uses the Firebase JS SDK, so it runs in Expo Go and dev builds.
+This app uses **Firebase Auth** (email/password **and Google**) and **Cloud
+Firestore** for the todo list. The email/password flow uses the Firebase JS SDK
+and runs in Expo Go; **Google sign-in needs a development build** (see below).
 
 ### 1. Create a Firebase project
 
 1. Go to the [Firebase Console](https://console.firebase.google.com/) and create a project.
-2. In **Build → Authentication → Sign-in method**, enable **Email/Password**.
+2. In **Build → Authentication → Sign-in method**, enable **Email/Password** and **Google**.
 3. In **Build → Firestore Database**, create a database (start in production mode).
 4. In **Project settings → General → Your apps**, add a **Web app** (`</>`) and
    copy the config values.
@@ -57,7 +58,52 @@ EXPO_PUBLIC_FIREBASE_APP_ID=...
 
 Restart the dev server after editing `.env` (`npx expo start -c`).
 
-### 3. Firestore security rules
+### 3. Google sign-in
+
+Google sign-in uses [`@react-native-google-signin/google-signin`](https://react-native-google-signin.github.io/),
+which is native code. **It does not work in Expo Go** — you need a development
+build. Everything else in the app still runs in Expo Go.
+
+**a. Get the OAuth client IDs.** Enabling Google in
+**Authentication → Sign-in method** creates them for you. Find them in
+[Google Cloud Console](https://console.cloud.google.com/apis/credentials) →
+**APIs & Services → Credentials**, in the same project as Firebase.
+
+Add to `.env`:
+
+```
+EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=1234...apps.googleusercontent.com
+EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID=1234...apps.googleusercontent.com
+```
+
+The **web** client ID is required on *every* platform — Firebase validates the
+returned ID token against it. The **iOS** client ID is only needed on iOS.
+
+**b. Register the native apps.** The app's ids are `com.oscetodo.app` (both
+platforms, set in `app.json`):
+
+- **iOS** — create an OAuth client of type *iOS* with bundle ID `com.oscetodo.app`.
+- **Android** — create an OAuth client of type *Android* with package
+  `com.oscetodo.app` **and your keystore's SHA-1**. Without the right SHA-1 you
+  get `DEVELOPER_ERROR` on sign-in. For a local debug build:
+
+  ```bash
+  keytool -list -v -keystore ~/.android/debug.keystore \
+    -alias androiddebugkey -storepass android -keypass android
+  ```
+
+  If you build with EAS, add the SHA-1 from `eas credentials` too.
+
+**c. Build and run:**
+
+```bash
+npx expo run:ios       # or: npx expo run:android
+```
+
+Re-run this after changing `app.json` — the scheme and package name are baked
+into the native project.
+
+### 4. Firestore security rules
 
 Each user's todos live under `users/{uid}/todos`. Paste these rules in
 **Firestore → Rules** so users can only read/write their own data:
@@ -76,7 +122,9 @@ service cloud.firestore {
 ### How it fits together
 
 - `lib/firebase.ts` — initializes the app, Auth (with AsyncStorage persistence), and Firestore.
-- `lib/user.tsx` — `UserProvider` / `useUser`: sign up, sign in, sign out, and live auth state.
+- `lib/user.tsx` — `UserProvider` / `useUser`: sign up, sign in, Google sign-in, sign out, and live auth state.
+- `lib/google-auth.ts` — native Google picker → ID token → `signInWithCredential`, plus error mapping.
+- `components/GoogleButton.tsx` — the "Continue with Google" button and `or` divider.
 - `lib/todos.ts` — `useTodos` (realtime) plus `addTodo` / `setTodoTitle` / `toggleTodo` / `deleteTodo`.
 - `app/_layout.tsx` — auth gate that redirects between the auth screens and the app.
 
