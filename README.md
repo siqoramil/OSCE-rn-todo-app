@@ -122,11 +122,23 @@ service cloud.firestore {
 ### How it fits together
 
 - `lib/firebase.ts` — initializes the app, Auth (with AsyncStorage persistence), and Firestore.
-- `lib/user.tsx` — `UserProvider` / `useUser`: sign up, sign in, Google sign-in, sign out, and live auth state.
-- `lib/google-auth.ts` — native Google picker → ID token → `signInWithCredential`, plus error mapping.
-- `components/GoogleButton.tsx` — the "Continue with Google" button and `or` divider.
-- `lib/todos.ts` — `useTodos` (realtime) plus `addTodo` / `setTodoTitle` / `toggleTodo` / `deleteTodo`.
-- `app/_layout.tsx` — auth gate that redirects between the auth screens and the app.
+- `lib/user.tsx` — `UserProvider` / `useUser`: sign up, sign in, Google sign-in, password reset, sign out, and live auth state.
+- `lib/google-auth.ts` — native Google picker → ID token → `signInWithCredential`, plus error mapping. The native module is `require`d lazily so the app still boots in Expo Go.
+- `lib/todos.ts` — `useTodos` (realtime) plus `addTodo` / `updateTodo` / `toggleTodo` / `deleteTodo`, and the `isOverdue` helper. Each todo carries an optional `dueAt` deadline.
+- `lib/i18n.tsx` — EN/RU/KO strings, plus `formatDueDate` for locale-aware deadlines.
+- `app/_layout.tsx` — auth gate that redirects between the auth screens and the tabs.
+- `app/(tabs)/index.tsx` — the task list: compose form with a due date, All/Active/Done filter, search, and swipe-to-delete rows.
+- `app/(tabs)/profile.tsx` — account details, task stats, theme and language settings, sign-out.
+- `app/forgot-password.tsx` — sends a Firebase password-reset email.
+- `components/` — `TodoRow` (swipeable row), `DueDatePicker`, `FilterBar`, `GoogleButton`, `LanguageSwitcher`, `Logo`.
+
+### Features
+
+- **Due dates** — optional deadline per task via `@react-native-community/datetimepicker`; overdue tasks are flagged in red on the list and counted in the header and profile.
+- **Filter & search** — All / Active / Done segmented control with live counts, plus title search. Both run client-side over the realtime snapshot, so no extra Firestore reads or composite indexes.
+- **Swipe to delete** — rows use `ReanimatedSwipeable`; swiping left reveals Edit and Delete. `expo-haptics` gives feedback on toggle, edit and delete.
+- **Password reset** — "Forgot password?" on the login screen. An unknown email still reports success, so the screen cannot be used to enumerate accounts.
+- **Tabs** — the task list and profile live in a bottom tab bar under `app/(tabs)/`.
 
 ## Get a fresh project
 

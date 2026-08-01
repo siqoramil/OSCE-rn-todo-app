@@ -3,6 +3,7 @@ import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { ActivityIndicator, View } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import 'react-native-reanimated';
 import '../global.css';
@@ -15,10 +16,10 @@ export const unstable_settings = {
   initialRouteName: 'login',
 };
 
-const AUTH_ROUTES = ['login', 'signup'];
+const AUTH_ROUTES = ['login', 'signup', 'forgot-password'];
 
-// Redirect based on auth state: signed-out users are kept on login/signup,
-// signed-in users are pushed into the app.
+// Redirect based on auth state: signed-out users are kept on the auth screens,
+// signed-in users are pushed into the tabs.
 function useProtectedRoute() {
   const { user, initializing } = useUser();
   const segments = useSegments();
@@ -56,7 +57,8 @@ function RootNavigator() {
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="login" />
         <Stack.Screen name="signup" />
-        <Stack.Screen name="index" />
+        <Stack.Screen name="forgot-password" />
+        <Stack.Screen name="(tabs)" />
       </Stack>
       <StatusBar style="auto" />
     </ThemeProvider>
@@ -65,12 +67,15 @@ function RootNavigator() {
 
 export default function RootLayout() {
   return (
-    <KeyboardProvider>
-      <I18nProvider>
-        <UserProvider>
-          <RootNavigator />
-        </UserProvider>
-      </I18nProvider>
-    </KeyboardProvider>
+    // Required by react-native-gesture-handler for the swipeable todo rows.
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <KeyboardProvider>
+        <I18nProvider>
+          <UserProvider>
+            <RootNavigator />
+          </UserProvider>
+        </I18nProvider>
+      </KeyboardProvider>
+    </GestureHandlerRootView>
   );
 }

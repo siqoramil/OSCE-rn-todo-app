@@ -1,6 +1,7 @@
 import {
   createUserWithEmailAndPassword,
   onAuthStateChanged,
+  sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signOut as firebaseSignOut,
   updateProfile,
@@ -29,6 +30,7 @@ type AuthContextValue = {
   signUp: (fullName: string, email: string, password: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
   signOut: () => Promise<void>;
 };
 
@@ -65,6 +67,8 @@ export function authErrorKey(error: unknown): string {
       return 'wrongCredentials';
     case 'auth/network-request-failed':
       return 'networkError';
+    case 'auth/too-many-requests':
+      return 'tooManyRequests';
     default:
       return 'genericError';
   }
@@ -113,6 +117,20 @@ export function UserProvider({ children }: { children: ReactNode }) {
       },
       signInWithGoogle: async () => {
         await signInWithGoogle();
+      },
+      resetPassword: async (email) => {
+        try {
+          await sendPasswordResetEmail(auth, email.trim());
+        } catch (e) {
+          // "No such user" is deliberately swallowed: reporting it would let
+          // anyone probe which emails have accounts. The screen shows the same
+          // "check your inbox" message either way.
+          const code =
+            typeof e === 'object' && e !== null && 'code' in e
+              ? String((e as { code: unknown }).code)
+              : '';
+          if (code !== 'auth/user-not-found') throw e;
+        }
       },
       signOut: async () => {
         // Clear the cached Google account too, otherwise the next sign-in
